@@ -1,4 +1,5 @@
 /** \file ssWi.cpp
+ *
  *  \brief implementation of the internal functions for mananing the protocol
  *
  */
@@ -13,23 +14,12 @@
 #include <map>
 
 
-
 /** \brief first byte of the header
  *
- * The header is composed of 3 bytes
+ * The header is composed of 3 bytes: START_0 START_1 START_2
  */
 #define START_0 255
-
-/** \brief second byte of the header
- *
- * The header is composed of 3 bytes
- */
 #define START_1 130
-
-/** \brief third byte of the header
- *
- * The header is composed of 3 bytes
- */
 #define START_2 255
 
 
@@ -41,8 +31,7 @@
 
 /** \brief channel abstraction
  *
- * This object represent the communication channel that can be
- * different means
+ * This object represent the communication channel. It can be different means
  */
 ssWiChannel* channel = NULL;
 
@@ -78,12 +67,12 @@ bool ssWi_init (ssWiChannel* c, int rateTX, int rateRX)
 {
     if (channel!=NULL)
         return false;
-    //mutexChannel.lock();
+    
+    // nothing else is using the channel
     channel = c;
-    //mutexChannel.unlock();
     TXRate = rateTX > 0 ? 1000/rateTX : 0;
     RXRate = rateRX > 0 ? 1000/rateRX : 0;
-    
+    // start txer and rxer
     readingThread.start(functionReceiver);
     writingThread.start(functionSender);
 
@@ -93,11 +82,15 @@ bool ssWi_init (ssWiChannel* c, int rateTX, int rateRX)
 void functionSender() {
     static char buffer[INTERNAL_BUFFER_SIZE];
 
-    while (1) {
+    while (true) {
         int n = 3;
         int numFrames = 0;
+        
+        // copy data
         for (std::map<int, ssWiPort>::iterator it = ports.begin();
-            it != ports.end(); it++) {
+                                                      it != ports.end(); it++) {
+            if ((n + sizeof(PortValue) + sizeof(PortID)) > INTERNAL_BUFFER_SIZE)
+                break;
             if ((*it).second.isModified()) {
                 buffer[n++] = (*it).first;
                 PortValue tmp = (*it).second.getTXValue();
@@ -106,15 +99,16 @@ void functionSender() {
                 numFrames++;
             }
         }
+        // add header and send
         if (numFrames > 0) {
             buffer[0] = START_0;
             buffer[1] = START_1;
             buffer[2] = START_2;
-            if (!mutexChannel.trylock())
-                return;
+            mutexChannel.lock();
             channel->write(buffer, n);
             mutexChannel.unlock();
         }
+        
         thread_sleep_for(TXRate);
     }
 }
@@ -127,16 +121,17 @@ void functionReceiver ()
     while(1) {
         thread_sleep_for(RXRate);
 
-        if (!mutexChannel.trylock())
-            return;
+        // read buffer
+        mutexChannel.lock();
         int n = channel->read(buffer + offset);
         mutexChannel.unlock();
-        
+        // not enough to find the header, merge with next message as the buffer 
+        // can contain part of the header
         if (n < 3) {
             offset = n;
             continue;
         }
-
+        // find header
         int index = -1;
         for (int i=0; i<(n-2); i++) {
             if (buffer[i]==START_0 && buffer[i+1]==START_1 && buffer[i+2]==START_2) {
@@ -144,13 +139,11 @@ void functionReceiver ()
                 break;
             }
         }
-
-        if (index < 0) {
-            offset = n;
-            continue;
-        }
+        // header not found, discard everthing
         offset = 0;
-
+        if (index < 0)
+            continue;
+        // read samples
         while((index + sizeof(PortID) + sizeof(PortValue)) <= n) {
             PortID port = buffer[index++];
             PortValue value = 0;
@@ -165,15 +158,17 @@ void functionReceiver ()
 
 inline bool ssWi_isActive (PortID port)
 {
-    return channel!=NULL && ports.find(port)!=ports.end();
+    return channel != NULL && ports.find(port) != ports.end();
 }
 
 
 bool ssWi_setPort (PortID port)
 {
-    if (channel==NULL)
+    if (channel == NULL)
         return false;
+        
     ports[port];
+    
     return true;
 }
 
@@ -182,6 +177,8 @@ bool ssWi_unsetPort (PortID port)
 {
     if (!ssWi_isActive(port))
         return false;
+
     ports.erase(port);
+
     return true;
 }

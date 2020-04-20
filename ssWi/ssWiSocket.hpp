@@ -1,4 +1,5 @@
 /** \file ssWiSocket.hpp
+ *
  *  \brief Header for the communication socket
  *
  */

@@ -12,7 +12,9 @@ void XBeeModule::readResponse (char* msg)
 {
     char c = 0;
     int i = 0;
-    while (c!='\r') {
+
+    // read until it sends \r
+    while (c != '\r') {
         if (serial_xbee.readable()) {
             c = serial_xbee.getc();
             msg[i++] = c;
@@ -23,21 +25,23 @@ void XBeeModule::readResponse (char* msg)
 bool XBeeModule::executeWithOk (const char* cmd)
 {
     char msg[5];
-    
+
+    // send command
     serial_xbee.printf("%s", cmd);
-    //printf("command %s\r\n", cmd);
+    // read response
     readResponse(msg);
-    //printf("response %s\r\n", msg);
-    if (strncmp(msg, "OK\r", 3)!=0)
+    // check response
+    if (strncmp(msg, "OK\r", 3) != 0)
         return false;
-        
+    
     return true;
 }
 
-
 void XBeeModule::executeWithRes (const char* cmd, char* res)
 {
+    // send command
     serial_xbee.printf("%s", cmd);
+    // read response
     readResponse(res);
 }
 
@@ -54,19 +58,9 @@ bool XBeeModule::initSequence()
     return true;
 }
 
-XBeeModule::XBeeModule (PinName tx, PinName rx, int panID, int channel) : serial_xbee(tx, rx, 9600)
-{
-    status = false;
-    // read address
-    if (!_getLocalAddr())
-        return;
-    // set channel
-    if (!_setChannel(channel))
-        return;
-    // set pan ID
-    if (!_setPanID(panID))
-        return;
-    status = true;
+XBeeModule::XBeeModule (PinName tx, PinName rx, int panID, int channel)
+                                                   : serial_xbee(tx, rx, 9600) {
+    status = _getLocalAddr() && _setChannel(channel) && _setPanID(panID);
 }
 
 bool XBeeModule::getDstAddress (XBeeAddress &addr)
@@ -114,7 +108,7 @@ bool XBeeModule::setDstAddress (XBeeAddress addr)
     // terminate
     if (!executeWithOk("ATCN \r"))
         return false;
-        ThisThread::sleep_for(1000);
+    ThisThread::sleep_for(1000);
 
     return true;
 }
@@ -158,6 +152,7 @@ bool XBeeModule::_setChannel (int channel)
         return false;
     if (!executeWithOk("ATCN \r"))
         return false;
+
     return true;
 }
 
@@ -174,6 +169,7 @@ int XBeeModule::getChannel ()
     if (!executeWithOk("ATCN \r"))
         return -1;
     ThisThread::sleep_for(1000);
+
     return channel;
 }
 
@@ -211,16 +207,15 @@ int XBeeModule::getPanID ()
 }
 
 
-
 int XBeeModule::read (char* msg)
 {
     int i = 0;
+    
     while (serial_xbee.readable())
         msg[i++] = serial_xbee.getc();
+
     return i;
 }
-
-
 
 void XBeeModule::write (const char* msg, int n)
 {

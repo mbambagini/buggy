@@ -10,6 +10,7 @@
 
 #include "ssWiTypes.hpp"
 
+#include <atomic>
 
 /** \brief Internal type which represents a logical flow
  *
@@ -21,17 +22,13 @@
 class ssWiPort
 {
     /** \brief receiving buffer */
-    PortValue valueRX;
-    /** \brief receiving mutex */
-    Mutex mutexRX;
+    std::atomic<PortValue> valueRX;
 
     /** \brief transmission buffer */
-    PortValue valueTX;
-    /** \brief transmission mutex */
-    Mutex mutexTX;
+    std::atomic<PortValue> valueTX;
 
     /** \brief modification flag (if true a new value has to be sent) */
-    bool modified;
+    std::atomic<bool> modified;
 
 public:
 

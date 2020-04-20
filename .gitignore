@@ -4,3 +4,4 @@ projectfiles
 *.py*
 BUILD
 ssWi
+mbed-os

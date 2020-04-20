@@ -2,7 +2,7 @@
  *  \brief header of the ssWi channel using the XBee module
  *
  */
- 
+
 #ifndef __XBEE_MODULE_HPP__
 #define __XBEE_MODULE_HPP__
 

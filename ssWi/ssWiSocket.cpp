@@ -25,5 +25,6 @@ ssWiSocket* ssWiSocket::createSocket(PortID id)
 {
     if (!ssWi_setPort(id))
         return NULL;
+        
     return new ssWiSocket(id);
 }

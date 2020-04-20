@@ -1,4 +1,5 @@
 /** \file ssWi.hpp
+ *
  *  \brief internal functions for mananing the protocol
  *
  */
@@ -9,9 +10,9 @@
 #include "ssWiTypes.hpp"
 
 
-/** \brief number of provided ports
+/** \brief max number of provided ports
  */
-#define N_PORTS 256
+#define N_PORTS 255
 
 
 class ssWiChannel;
