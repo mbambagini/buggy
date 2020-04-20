@@ -1,0 +1,12 @@
+data/ssWi.hpp.i
+data/ssWiPort.cpp.i
+data/ssWiSocket.cpp.i
+data/xbee/xbee.hpp.i
+data/ssWiTypes.hpp.i
+data/xbee/xbee.cpp.i
+data/ssWiSocket.hpp.i
+data/xbee/MODSERIAL.lib.i
+data/xbee.lib.i
+data/ssWiPort.hpp.i
+data/ssWi.cpp.i
+data/ssWiChannel.hpp.i
