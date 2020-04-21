@@ -100,7 +100,6 @@ void motor_thread() {
             speedLeft = abs(speedLeft);
             speedRight = abs(speedRight);
         }
-        printf("Motors %f, %f\n\r", speedLeft, speedRight);
         // actuator
         set_left_motor(speedLeft, fwdLeft);
         set_right_motor(speedRight, fwdRight);
